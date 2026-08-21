@@ -11,6 +11,13 @@ VOICES = [
     {"voice": "cedar", "gender": "male"},
 ]
 
+# Agent (AI rep) names, chosen to match the voice gender so a female voice never
+# gets a male name and vice versa.
+AGENT_NAMES = {
+    "female": ["Sarah", "Emily", "Jessica", "Rachel", "Ashley", "Megan", "Lauren", "Hannah"],
+    "male": ["Michael", "David", "Chris", "Daniel", "Ryan", "Kevin", "Brian", "Jason"],
+}
+
 
 def _join(*parts):
     return "\n\n".join(p.strip() for p in parts if p and p.strip())
@@ -43,12 +50,18 @@ def build_session(mode, settings, difficulty="easy"):
         }
 
     if mode == "agent":
-        instructions = _join(settings.get("agent_system_prompt"), platform)
+        name = random.choice(AGENT_NAMES[chosen["gender"]])
+        identity = (
+            f"For this call your name is {name} and you are located in Austin, Texas. "
+            f"Introduce yourself with this exact name and never use any other name."
+        )
+        instructions = _join(identity, settings.get("agent_system_prompt"), platform)
         return {
             "mode": mode,
             "instructions": instructions,
             "voice": chosen["voice"],
             "greeter": "ai",
+            "name": name,
             "customer": None,
         }
 

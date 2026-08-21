@@ -43,6 +43,18 @@ def check_session_building():
     assert "AGENT_MARK" in a["instructions"]
     assert "CUSTOMER_MARK" not in a["instructions"]
 
+    # Agent name must match the voice gender across many draws.
+    from app.session import AGENT_NAMES, VOICES
+    gender_of = {v["voice"]: v["gender"] for v in VOICES}
+    for _ in range(40):
+        s = build_session("agent", settings)
+        assert s["name"] in AGENT_NAMES[gender_of[s["voice"]]], (s["voice"], s["name"])
+        assert f"your name is {s['name']}" in s["instructions"]
+    # Training customer name matches its voice gender too.
+    for _ in range(40):
+        s = build_session("training", settings)
+        assert s["customer"]["name"] in s["instructions"]
+
     try:
         build_session("bogus", settings)
     except ValueError:
