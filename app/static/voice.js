@@ -82,8 +82,17 @@
 
       this.ws.onopen = () => this._onOpen();
       this.ws.onmessage = (e) => this._onMessage(JSON.parse(e.data));
-      this.ws.onerror = () => this._status("Connection error");
-      this.ws.onclose = () => { if (this.active) this._status("Connection closed"); };
+      this.ws.onerror = (e) => {
+        console.error("Realtime WS error", e);
+        this._status("Connection error (check DevTools console)");
+      };
+      this.ws.onclose = (e) => {
+        console.warn("Realtime WS closed", e.code, e.reason);
+        if (this.active) {
+          this._status("Connection closed [code " + e.code +
+            (e.reason ? ", " + e.reason : "") + "]");
+        }
+      };
     }
 
     _onOpen() {
@@ -174,6 +183,13 @@
 
     _onMessage(msg) {
       switch (msg.type) {
+        case "session.created":
+          console.log("Realtime session.created");
+          break;
+        case "session.updated":
+          console.log("Realtime session.updated");
+          break;
+
         case "input_audio_buffer.speech_started":
           // User started talking. If the AI was mid-utterance, that's a barge-in:
           // stop local playback and cancel the server-side response.
@@ -203,7 +219,9 @@
           break;
 
         case "error":
-          this._status("Error: " + (msg.error && msg.error.message || "unknown"));
+          console.error("Realtime error event:", msg.error);
+          this._status("Realtime error: " +
+            (msg.error && (msg.error.message || msg.error.code) || "unknown"));
           break;
       }
     }
