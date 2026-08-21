@@ -55,6 +55,39 @@ def check_session_building():
     print("OK: session building, prompt isolation between roles, greeter/backchannel")
 
 
+def check_auth():
+    import os
+    os.environ["CCA_ADMIN_USER"] = "tester"
+    os.environ["CCA_ADMIN_PASSWORD"] = "s3cret-temp"
+
+    from app import create_app
+    app = create_app()
+    app.config["SECRET_KEY"] = "test-key"
+    c = app.test_client()
+
+    # Unauthenticated access to a protected page redirects to login.
+    r = c.get("/training/")
+    assert r.status_code == 302 and "/login" in r.headers["Location"], r.headers.get("Location")
+
+    # Protected API endpoint is also gated (not billable without a session).
+    assert c.post("/agent/session", json={}).status_code == 302
+
+    # Wrong credentials do not create a session.
+    c.post("/login", data={"username": "tester", "password": "wrong"})
+    assert c.get("/training/").status_code == 302
+
+    # Correct credentials grant access.
+    r = c.post("/login", data={"username": "tester", "password": "s3cret-temp"})
+    assert r.status_code == 302
+    assert c.get("/training/").status_code == 200
+
+    # Logout revokes access again.
+    c.get("/logout")
+    assert c.get("/training/").status_code == 302
+
+    print("OK: auth gate, credential check, logout")
+
+
 def main():
     with tempfile.TemporaryDirectory() as d:
         store = SettingsStore(os.path.join(d, "settings.json"))
@@ -82,6 +115,7 @@ def main():
 
     print("OK: settings store defaults, override isolation, persistence, key guard")
     check_session_building()
+    check_auth()
 
 
 if __name__ == "__main__":

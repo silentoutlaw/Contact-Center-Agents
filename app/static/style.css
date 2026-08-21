@@ -23,3 +23,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .results { margin-top: 1rem; }
 details { margin-top: 1.5rem; }
 summary { cursor: pointer; font-weight: 600; }
+.spacer { flex: 1; }
+.user { font-weight: 600; color: var(--fg); }
+.error { color: #b00020; font-weight: 600; }
+.login { display: flex; flex-direction: column; gap: .5rem; max-width: 320px; }
+.login input { padding: .5rem; }

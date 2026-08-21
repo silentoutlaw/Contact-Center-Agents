@@ -8,9 +8,14 @@
 </head>
 <body>
   <nav aria-label="Primary navigation">
-    <a href="{{ url_for('training.index') }}">Technical Support Call Training</a>
-    <a href="{{ url_for('agent.index') }}">Agentic Call Center Agent</a>
-    <a href="{{ url_for('admin.index') }}">Admin Panel</a>
+    {% if session.get('user') %}
+      <a href="{{ url_for('training.index') }}">Technical Support Call Training</a>
+      <a href="{{ url_for('agent.index') }}">Agentic Call Center Agent</a>
+      <a href="{{ url_for('admin.index') }}">Admin Panel</a>
+      <span class="spacer"></span>
+      <span class="user">{{ session['user'] }}</span>
+      <a href="{{ url_for('auth.logout') }}">Log out</a>
+    {% endif %}
   </nav>
   <main>
     {% block content %}{% endblock %}
