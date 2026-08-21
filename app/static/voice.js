@@ -55,6 +55,7 @@
       this.scheduledSources = [];
       this.nextPlayTime = 0;
       this.aiSpeaking = false;
+      this._aiStartedAt = 0;
       this.transcript = [];
       this.active = false;
       this._backchannelTimer = null;
@@ -115,9 +116,9 @@
               // user barges in; we additionally stop playback locally for snappiness.
               turn_detection: {
                 type: "server_vad",
-                threshold: 0.8,
-                prefix_padding_ms: 200,
-                silence_duration_ms: 700,
+                threshold: 0.9,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 500,
                 interrupt_response: true,
               },
             },
@@ -163,6 +164,7 @@
       const startAt = Math.max(now, this.nextPlayTime);
       source.start(startAt);
       this.nextPlayTime = startAt + buffer.duration;
+      if (!this.aiSpeaking) this._aiStartedAt = Date.now();
       this.aiSpeaking = true;
       this.scheduledSources.push(source);
       source.onended = () => {
@@ -191,11 +193,15 @@
           break;
 
         case "input_audio_buffer.speech_started":
-          // User started talking. If the AI was mid-utterance, that's a barge-in:
-          // stop local playback and cancel the server-side response.
-          if (this.aiSpeaking) {
+          // Real barge-in: stop LOCAL playback so the user isn't talked over.
+          // The server (interrupt_response) cancels its own response, so we do
+          // NOT send response.cancel here — that produced "no active response"
+          // errors. The grace window stops the AI cutting itself off via speaker
+          // echo the instant it starts talking.
+          // CEILING: echo suppression is heuristic; use headphones for clean
+          // full-duplex. Upgrade: server-mixed audio with proper AEC reference.
+          if (this.aiSpeaking && (Date.now() - this._aiStartedAt) > 500) {
             this._stopPlayback();
-            this.ws.send(JSON.stringify({ type: "response.cancel" }));
           }
           this._maybeStartBackchannel();
           break;
@@ -219,9 +225,14 @@
           break;
 
         case "error":
+          var em = (msg.error && (msg.error.message || msg.error.code)) || "unknown";
+          // Benign races we can ignore rather than alarm the user.
+          if (/no active response|cancellation failed/i.test(em)) {
+            console.warn("Ignored benign realtime error:", em);
+            break;
+          }
           console.error("Realtime error event:", msg.error);
-          this._status("Realtime error: " +
-            (msg.error && (msg.error.message || msg.error.code) || "unknown"));
+          this._status("Realtime error: " + em);
           break;
       }
     }
