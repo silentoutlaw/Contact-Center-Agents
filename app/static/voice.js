@@ -3,23 +3,15 @@
  * Connects the browser straight to the OpenAI Realtime API over WebSocket,
  * streams mic audio as PCM16, and plays the model's audio back.
  *
- * Two behaviours this file exists to get right:
- *   1. Barge-in: when the user starts talking over the AI, we immediately stop
- *      playback AND cancel the in-flight response. Without this the AI keeps
- *      talking over the user (the original bug).
- *   2. Backchannel: brief "mm-hm / yeah / okay" acknowledgements while the user
- *      speaks, produced locally via the browser SpeechSynthesis API so they are
- *      fully decoupled from the model's audio stream and reasoning.
+ * Barge-in: when the user starts talking over the AI, we immediately stop local
+ * playback. The server VAD (interrupt_response) cancels its own response, so the
+ * AI stops talking. A short grace window prevents the AI cutting itself off via
+ * speaker echo the instant it starts speaking.
  */
 (function (global) {
   "use strict";
 
   const SAMPLE_RATE = 24000;
-  const BACKCHANNELS = ["mm-hm", "yeah", "okay", "right", "uh-huh", "got it"];
-  // Fire a backchannel only after the user has been talking this long, and no
-  // more often than the throttle. Heuristic — tune to taste.
-  const BACKCHANNEL_AFTER_MS = 2200;
-  const BACKCHANNEL_THROTTLE_MS = 3500;
 
   function pcm16ToBase64(float32) {
     const int16 = new Int16Array(float32.length);
@@ -58,8 +50,6 @@
       this._aiStartedAt = 0;
       this.transcript = [];
       this.active = false;
-      this._backchannelTimer = null;
-      this._lastBackchannel = 0;
     }
 
     _status(text) { if (this.on.onStatus) this.on.onStatus(text); }
@@ -203,11 +193,6 @@
           if (this.aiSpeaking && (Date.now() - this._aiStartedAt) > 500) {
             this._stopPlayback();
           }
-          this._maybeStartBackchannel();
-          break;
-
-        case "input_audio_buffer.speech_stopped":
-          this._stopBackchannel();
           break;
 
         case "response.audio.delta":
@@ -237,37 +222,10 @@
       }
     }
 
-    /* ---- Backchannel (local, decoupled from the model) ------------------ */
-
-    _maybeStartBackchannel() {
-      if (!this.config.backchannel || !global.speechSynthesis) return;
-      this._stopBackchannel();
-      // Only after the user has been speaking a while, so we don't chirp at every
-      // tiny sound. CEILING: local synth is a different voice than the model's,
-      // and speaker output may bleed into the mic. Upgrade: server-side mixed
-      // low-latency backchannel audio in the model voice + echo cancellation.
-      this._backchannelTimer = setTimeout(() => {
-        const now = Date.now();
-        if (now - this._lastBackchannel < BACKCHANNEL_THROTTLE_MS) return;
-        this._lastBackchannel = now;
-        const u = new SpeechSynthesisUtterance(
-          BACKCHANNELS[Math.floor(Math.random() * BACKCHANNELS.length)]
-        );
-        u.volume = 0.5; u.rate = 1.1; u.pitch = 1.0;
-        global.speechSynthesis.speak(u);
-      }, BACKCHANNEL_AFTER_MS);
-    }
-
-    _stopBackchannel() {
-      if (this._backchannelTimer) {
-        clearTimeout(this._backchannelTimer);
-        this._backchannelTimer = null;
-      }
-    }
+    /* ---- Teardown -------------------------------------------------------- */
 
     stop() {
       this.active = false;
-      this._stopBackchannel();
       this._stopPlayback();
       if (this.micProcessor) { this.micProcessor.disconnect(); this.micProcessor = null; }
       if (this.micCtx) { this.micCtx.close(); this.micCtx = null; }

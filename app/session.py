@@ -4,13 +4,11 @@ import random
 
 from . import tech_support_training as tst
 
-# Realtime voices paired with a gender so the customer sim matches the voice.
+# Natural gpt-realtime voices only, paired with a gender so the customer sim
+# matches the voice. Older voices (echo/shimmer/ash) sound robotic and are excluded.
 VOICES = [
     {"voice": "marin", "gender": "female"},
-    {"voice": "shimmer", "gender": "female"},
-    {"voice": "ash", "gender": "male"},
     {"voice": "cedar", "gender": "male"},
-    {"voice": "echo", "gender": "male"},
 ]
 
 
@@ -25,8 +23,7 @@ def build_session(mode, settings, difficulty="easy"):
               greets first. Customer identity/difficulty come from the reused sim;
               the admin `customer_system_prompt` is layered on as extra steering.
     agent:    AI is the support agent and greets first; the human is the caller.
-              Uses the admin `agent_system_prompt`. Backchannels are enabled here
-              because the AI is the listener while the human talks.
+              Uses the admin `agent_system_prompt`.
     """
     chosen = random.choice(VOICES)
     platform = settings.get("system_prompt")
@@ -42,7 +39,6 @@ def build_session(mode, settings, difficulty="easy"):
             "instructions": instructions,
             "voice": chosen["voice"],
             "greeter": "user",
-            "backchannel": False,
             "customer": customer_data,
         }
 
@@ -53,7 +49,6 @@ def build_session(mode, settings, difficulty="easy"):
             "instructions": instructions,
             "voice": chosen["voice"],
             "greeter": "ai",
-            "backchannel": True,
             "customer": None,
         }
 
