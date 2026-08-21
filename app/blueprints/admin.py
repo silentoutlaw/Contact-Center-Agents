@@ -18,7 +18,7 @@ EDITABLE = [
     "grading_rubric",
 ]
 
-MIN_PASSWORD_LEN = 12
+MIN_PASSWORD_LEN = 6
 
 
 def _render(**extra):
