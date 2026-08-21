@@ -1,9 +1,9 @@
-"""Admin credential storage.
+"""Admin credential storage (multi-user).
 
 Precedence: if data/credentials.json exists, verify against its salted PBKDF2
-hash. Otherwise fall back to the .env bootstrap (CCA_ADMIN_USER / _PASSWORD).
-This lets the first login work from .env and lets the admin change the password
-persistently without storing plaintext.
+hashes. Otherwise fall back to the .env bootstrap (CCA_ADMIN_USER / _PASSWORD).
+This lets the first login work from .env and lets admins change passwords and
+add users persistently without storing plaintext.
 """
 import hashlib
 import hmac
@@ -27,42 +27,67 @@ class Credentials:
         self._lock = threading.Lock()
 
     def _read(self):
-        if os.path.exists(self.path):
-            with open(self.path, encoding="utf-8") as f:
-                return json.load(f)
+        """Return list of user dicts, migrating single-user format if needed."""
+        if not os.path.exists(self.path):
+            return []
+        with open(self.path, encoding="utf-8") as f:
+            data = json.load(f)
+        # Migrate old single-user format {"username":..., "salt":..., "hash":...}
+        if isinstance(data, dict) and "username" in data:
+            data = [data]
+            self._write(data)
+        return data
+
+    def _write(self, users):
+        tmp = self.path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(users, f, indent=2)
+        os.replace(tmp, self.path)
+        os.chmod(self.path, 0o600)
+
+    def _find(self, username):
+        for u in self._read():
+            if u["username"] == username:
+                return u
         return None
 
     def username(self):
-        stored = self._read()
-        if stored:
-            return stored["username"]
+        """Return the first stored username (for display), or the env bootstrap."""
+        users = self._read()
+        if users:
+            return users[0]["username"]
         return os.environ.get("CCA_ADMIN_USER")
 
     def verify(self, username, password):
-        """Constant-time check against the stored hash, else the .env bootstrap."""
-        stored = self._read()
-        if stored:
-            calc = _pbkdf2(password or "", stored["salt"])
-            ok_user = hmac.compare_digest(username or "", stored["username"])
-            ok_pass = hmac.compare_digest(calc, stored["hash"])
-            return ok_user and ok_pass
-        u = os.environ.get("CCA_ADMIN_USER")
-        p = os.environ.get("CCA_ADMIN_PASSWORD")
-        if not u or not p:
-            return False
-        return (hmac.compare_digest(username or "", u)
-                and hmac.compare_digest(password or "", p))
+        """Constant-time check against stored hash, else the .env bootstrap."""
+        user = self._find(username or "")
+        if user:
+            calc = _pbkdf2(password or "", user["salt"])
+            return hmac.compare_digest(calc, user["hash"])
+        # Fallback to .env bootstrap if no stored users at all
+        if not self._read():
+            u = os.environ.get("CCA_ADMIN_USER")
+            p = os.environ.get("CCA_ADMIN_PASSWORD")
+            if not u or not p:
+                return False
+            return (hmac.compare_digest(username or "", u)
+                    and hmac.compare_digest(password or "", p))
+        return False
 
     def set_password(self, new_password, username=None):
         salt = secrets.token_hex(16)
-        data = {
+        entry = {
             "username": username or self.username(),
             "salt": salt,
             "hash": _pbkdf2(new_password, salt),
         }
         with self._lock:
-            tmp = self.path + ".tmp"
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(data, f)
-            os.replace(tmp, self.path)
-            os.chmod(self.path, 0o600)
+            users = self._read()
+            # Update existing or append new
+            for i, u in enumerate(users):
+                if u["username"] == entry["username"]:
+                    users[i] = entry
+                    self._write(users)
+                    return
+            users.append(entry)
+            self._write(users)
