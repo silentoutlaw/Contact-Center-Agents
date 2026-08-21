@@ -43,9 +43,6 @@
       const difficulty = difficultyEl ? difficultyEl.value : "easy";
       const cfg = await postJSON(sessionUrl, { difficulty });
       if (cfg.error) { statusEl.textContent = cfg.error; startBtn.disabled = false; return; }
-      if (!cfg.ephemeral) {
-        statusEl.textContent = "Live (dev: using standing key — do not expose publicly)";
-      }
       if (customerEl && cfg.customer) {
         customerEl.style.display = "";
         customerEl.textContent =

@@ -9,4 +9,5 @@ if __name__ == "__main__":
     #   sudo setcap 'cap_net_bind_service=+ep' $(readlink -f $(which python3))
     # If no cert/key is present, ssl_context() returns None and Flask serves http
     # (useful for local dev only, never expose http in production).
-    app.run(host=Config.HOST, port=Config.PORT, ssl_context=Config.ssl_context())
+    app.run(host=Config.HOST, port=Config.PORT, ssl_context=Config.ssl_context(),
+            threaded=True)

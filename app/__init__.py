@@ -22,11 +22,13 @@ def create_app():
     from .blueprints.training import bp as training_bp
     from .blueprints.agent import bp as agent_bp
     from .blueprints.admin import bp as admin_bp
+    from .relay import sock
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(training_bp)
     app.register_blueprint(agent_bp)
     app.register_blueprint(admin_bp)
+    sock.init_app(app)  # registers the /ws/realtime relay
 
     @app.before_request
     def require_login():

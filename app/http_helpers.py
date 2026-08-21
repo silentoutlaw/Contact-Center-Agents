@@ -6,16 +6,13 @@ from .session import build_session
 
 
 def start_session_response(mode):
-    """Mint a Realtime key and return the full per-call session spec as JSON."""
+    """Return the per-call session spec. No API key goes to the browser; the
+    server relays the Realtime connection (see app/relay.py)."""
     key = oc.load_api_key()
     if not key:
         return jsonify(error="OpenAI API key not configured"), 500
     difficulty = (request.get_json(silent=True) or {}).get("difficulty", "easy")
     spec = build_session(mode, current_app.settings, difficulty)
-    minted = oc.mint_realtime_key(key, spec["instructions"], spec["voice"])
-    spec["key"] = minted["key"]
-    spec["ephemeral"] = minted["ephemeral"]
-    spec["model"] = oc.REALTIME_MODEL
     return jsonify(spec)
 
 

@@ -75,10 +75,10 @@
       });
       this.playbackCtx = new AudioContext({ sampleRate: SAMPLE_RATE });
 
-      const proto = ["realtime", "openai-insecure-api-key." + this.config.key];
-      const url = "wss://api.openai.com/v1/realtime?model=" +
-        encodeURIComponent(this.config.model);
-      this.ws = new WebSocket(url, proto);
+      // Connect only to our own server, which relays to OpenAI (same origin, no key).
+      const scheme = location.protocol === "https:" ? "wss://" : "ws://";
+      const url = scheme + location.host + "/ws/realtime";
+      this.ws = new WebSocket(url);
 
       this.ws.onopen = () => this._onOpen();
       this.ws.onmessage = (e) => this._onMessage(JSON.parse(e.data));
