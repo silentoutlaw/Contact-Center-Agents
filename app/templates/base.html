@@ -3,22 +3,53 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Contact Center Agents{% endblock %}</title>
+  <title>{% block page_title %}Enterprise Support{% endblock %} · Enterprise Support</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <nav aria-label="Primary navigation">
-    {% if session.get('user') %}
-      <a href="{{ url_for('training.index') }}">Technical Support Call Training</a>
-      <a href="{{ url_for('agent.index') }}">Agentic Call Center Agent</a>
-      <a href="{{ url_for('admin.index') }}">Admin Panel</a>
-      <span class="spacer"></span>
-      <span class="user">{{ session['user'] }}</span>
-      <a href="{{ url_for('auth.logout') }}">Log out</a>
-    {% endif %}
-  </nav>
-  <main>
-    {% block content %}{% endblock %}
-  </main>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="brand">Enterprise Support<small>Contact Center Agents</small></div>
+
+      <div class="group">Contact Center</div>
+      <a class="nav {% if request.blueprint == 'training' %}active{% endif %}"
+         href="{{ url_for('training.index') }}">Technical Support Call Training</a>
+      <a class="nav {% if request.blueprint == 'agent' %}active{% endif %}"
+         href="{{ url_for('agent.index') }}">Agentic Call Center Agent</a>
+
+      <div class="group">Platform</div>
+      <a class="nav {% if request.blueprint == 'admin' %}active{% endif %}"
+         href="{{ url_for('admin.index') }}">Admin Panel</a>
+    </aside>
+    <div class="nav-backdrop" id="navBackdrop"></div>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="split">
+          <button class="btn menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+          <h1>{{ self.page_title() }}</h1>
+        </div>
+        <div class="split">
+          <span class="user-label">{{ session['user'] }}</span>
+          <a class="btn" href="{{ url_for('auth.logout') }}">Sign out</a>
+        </div>
+      </div>
+      <div class="content">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      var sb = document.getElementById('sidebar'),
+          bd = document.getElementById('navBackdrop'),
+          mb = document.getElementById('menuBtn');
+      function toggle(open) { sb.classList.toggle('open', open); bd.classList.toggle('open', open); }
+      if (mb) mb.onclick = function () { toggle(!sb.classList.contains('open')); };
+      if (bd) bd.onclick = function () { toggle(false); };
+    })();
+  </script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

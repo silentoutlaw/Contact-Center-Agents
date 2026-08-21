@@ -1,30 +1,76 @@
-:root { --fg: #1a1a1a; --bg: #fff; --accent: #0b5fff; --muted: #f2f4f8; }
-* { box-sizing: border-box; }
-body { margin: 0; font-family: system-ui, sans-serif; color: var(--fg); background: var(--bg); }
-nav { display: flex; gap: 1rem; padding: 1rem; background: var(--muted); flex-wrap: wrap; }
-nav a { color: var(--accent); text-decoration: none; font-weight: 600; }
-nav a:hover, nav a:focus { text-decoration: underline; }
-main { padding: 1.5rem; max-width: 900px; }
-pre { background: var(--muted); padding: 1rem; overflow-x: auto; white-space: pre-wrap; }
-.setting { margin-bottom: 2rem; display: flex; flex-direction: column; gap: .5rem; }
-.setting label { font-weight: 600; }
-textarea { width: 100%; font-family: ui-monospace, monospace; padding: .5rem; }
-button { align-self: flex-start; padding: .5rem 1rem; background: var(--accent);
-         color: #fff; border: 0; border-radius: 4px; cursor: pointer; }
-.controls { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin: 1rem 0; }
-.controls select { padding: .4rem; }
-button:disabled { opacity: .5; cursor: not-allowed; }
-.customer { background: #fff8e1; padding: .5rem .75rem; border-radius: 4px; }
-.transcript { min-height: 8rem; max-height: 22rem; overflow-y: auto; border: 1px solid #e0e4ea;
-              border-radius: 6px; padding: .75rem; margin: 1rem 0; }
-.msg { padding: .35rem .5rem; border-radius: 4px; margin-bottom: .35rem; }
-.msg.user { background: #e7f0ff; }
-.msg.ai { background: var(--muted); }
-.results { margin-top: 1rem; }
-details { margin-top: 1.5rem; }
-summary { cursor: pointer; font-weight: 600; }
-.spacer { flex: 1; }
-.user { font-weight: 600; color: var(--fg); }
-.error { color: #b00020; font-weight: 600; }
-.login { display: flex; flex-direction: column; gap: .5rem; max-width: 320px; }
-.login input { padding: .5rem; }
+:root{--nav:#10243e;--nav2:#17375e;--blue:#2563eb;--ink:#172033;--muted:#64748b;--line:#dbe3ed;--bg:#f4f7fb;--green:#087f5b;--amber:#b45309;--red:#b42318}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:var(--bg)}
+button,input,select,textarea{font:inherit}
+
+/* Layout */
+.shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.sidebar{background:var(--nav);color:#fff;padding:24px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{font-size:21px;font-weight:800;padding:0 10px 22px}
+.brand small{display:block;font-size:11px;letter-spacing:.1em;color:#a9bed8;text-transform:uppercase;margin-top:3px}
+.group{margin:18px 10px 7px;font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:#86a1c3}
+.nav{display:block;width:100%;text-align:left;border:0;background:transparent;color:#dbeafe;padding:10px 12px;border-radius:8px;cursor:pointer;margin:2px 0;text-decoration:none}
+.nav:hover,.nav.active{background:var(--nav2);color:#fff}
+.main{min-width:0}
+.topbar{height:66px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:5}
+.topbar h1{font-size:20px;margin:0}
+.content{padding:26px;max-width:1100px;margin:auto}
+
+/* Cards & typography */
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:0 1px 2px #10243e0a;margin-bottom:16px}
+h2,h3{margin:0 0 14px}
+.muted{color:var(--muted)}
+
+/* Buttons */
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:7px;padding:8px 13px;cursor:pointer;font-weight:650}
+.btn:hover{filter:brightness(.97)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.danger{color:var(--red)}
+.btn:disabled{opacity:.48;cursor:not-allowed;filter:none}
+
+/* Forms */
+.field,.setting{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.field label,.setting label{font-weight:650;font-size:12px}
+.field input,.field select,.field textarea,.setting textarea,.login input{border:1px solid #cbd5e1;border-radius:7px;padding:9px;background:#fff;width:100%}
+.setting textarea{min-height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;resize:vertical}
+
+/* Call UI */
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+.controls select{width:auto}
+.customer{background:#fff8e6;border:1px solid #f2d38a;padding:10px 12px;border-radius:8px}
+.transcript{min-height:9rem;max-height:24rem;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:12px;margin:12px 0;background:#fff}
+.msg{padding:8px 11px;border-radius:10px;margin-bottom:8px;max-width:88%;white-space:pre-wrap}
+.msg.user{background:var(--blue);color:#fff;margin-left:auto}
+.msg.ai{background:#f1f5f9}
+.results pre{background:#f4f7fb;border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;white-space:pre-wrap}
+pre{white-space:pre-wrap;overflow-wrap:anywhere}
+details{margin-top:6px}
+summary{cursor:pointer;font-weight:650;color:var(--muted)}
+.status{font-weight:650;color:var(--green)}
+
+/* Topbar user area */
+.split{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.user-label{color:var(--muted)}
+.menu-btn{display:none}
+.nav-backdrop{display:none}
+
+/* Login (standalone) */
+.auth-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.auth-card{width:min(380px,100%)}
+.auth-brand{font-size:22px;font-weight:800;color:var(--nav);margin-bottom:2px}
+.auth-brand small{display:block;font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-top:3px}
+.error{color:var(--red);font-weight:650}
+.login{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+
+/* Mobile drawer */
+@media(max-width:900px){
+  .shell{display:block}
+  .sidebar{position:fixed;inset:0 auto 0 0;z-index:40;width:min(82vw,300px);height:100dvh;transform:translateX(-105%);transition:transform .2s ease;box-shadow:12px 0 32px #09152644}
+  .sidebar.open{transform:translateX(0)}
+  .nav-backdrop{display:block;position:fixed;inset:0;background:#09152699;z-index:35;opacity:0;pointer-events:none;transition:opacity .2s}
+  .nav-backdrop.open{opacity:1;pointer-events:auto}
+  .menu-btn{display:inline-block;width:44px;height:44px;padding:0;font-size:20px}
+  .topbar{padding:0 12px}
+  .content{padding:14px}
+  .user-label{display:none}
+}

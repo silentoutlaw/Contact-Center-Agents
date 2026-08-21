@@ -1,36 +1,40 @@
 {% extends "base.html" %}
-{% block title %}Technical Support Call Training{% endblock %}
+{% block page_title %}Technical Support Call Training{% endblock %}
 {% block content %}
-  <h1>Technical Support Call Training</h1>
-  <p>You are the support agent. Answer the call and greet the customer first —
-     the simulated customer (AI) will then explain their issue. Grade yourself
-     against the admin rubric when you're done.</p>
+  <div class="card">
+    <p class="muted" style="margin-top:0">You are the support agent. Answer the call and greet the
+       customer first — the simulated customer (AI) will then explain their issue. Grade yourself
+       against the admin rubric when you're done.</p>
 
-  <div id="call"
-       data-session-url="{{ url_for('training.session') }}"
-       data-grade-url="{{ url_for('training.grade') }}">
-    <div class="controls">
-      <label for="difficulty">Difficulty</label>
-      <select id="difficulty">
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
-      </select>
-      <button id="start">Start call</button>
-      <button id="end" disabled>End call</button>
-      <button id="grade" disabled>Grade</button>
+    <div id="call"
+         data-session-url="{{ url_for('training.session') }}"
+         data-grade-url="{{ url_for('training.grade') }}">
+      <div class="controls">
+        <label for="difficulty">Difficulty</label>
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+        <button id="start" class="btn primary">Start call</button>
+        <button id="end" class="btn danger" disabled>End call</button>
+        <button id="grade" class="btn" disabled>Grade</button>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite">Idle</p>
+      <p id="customer" class="customer" style="display:none"></p>
+      <div id="transcript" class="transcript" aria-live="polite"></div>
+      <div id="results" class="results"></div>
     </div>
-    <p id="status" role="status" aria-live="polite">Idle</p>
-    <p id="customer" class="customer" style="display:none"></p>
-    <div id="transcript" class="transcript" aria-live="polite"></div>
-    <div id="results" class="results"></div>
   </div>
 
-  <details>
-    <summary>Active customer system prompt (admin-configurable)</summary>
-    <pre>{{ customer_prompt }}</pre>
-  </details>
-
+  <div class="card">
+    <details>
+      <summary>Active customer system prompt (admin-configurable)</summary>
+      <pre>{{ customer_prompt }}</pre>
+    </details>
+  </div>
+{% endblock %}
+{% block scripts %}
   <script src="{{ url_for('static', filename='voice.js') }}"></script>
   <script src="{{ url_for('static', filename='call-ui.js') }}"></script>
 {% endblock %}

@@ -1,14 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Admin Panel{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
 {% block content %}
-  <h1>Admin Panel</h1>
-  <p>Each setting is configured independently.</p>
+  <p class="muted" style="margin-top:0">Each setting is configured independently.</p>
   {% for key, value in settings.items() %}
-  <form method="post" class="setting">
-    <label for="{{ key }}">{{ key.replace('_', ' ').title() }}</label>
-    <input type="hidden" name="key" value="{{ key }}">
-    <textarea id="{{ key }}" name="value" rows="10">{{ value }}</textarea>
-    <button type="submit">Save {{ key.replace('_', ' ').title() }}</button>
-  </form>
+  <div class="card">
+    <form method="post" class="setting">
+      <label for="{{ key }}">{{ key.replace('_', ' ').title() }}</label>
+      <textarea id="{{ key }}" name="value">{{ value }}</textarea>
+      <input type="hidden" name="key" value="{{ key }}">
+      <button type="submit" class="btn primary">Save {{ key.replace('_', ' ').title() }}</button>
+    </form>
+  </div>
   {% endfor %}
 {% endblock %}
