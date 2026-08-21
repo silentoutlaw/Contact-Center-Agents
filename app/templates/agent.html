@@ -2,8 +2,24 @@
 {% block title %}Agentic Call Center Agent{% endblock %}
 {% block content %}
   <h1>Agentic Call Center Agent</h1>
-  <p>Technical support agent that helps callers. Tool calls (device health checks
-     and similar) are a planned later phase.</p>
-  <h2>Active agent system prompt</h2>
-  <pre>{{ agent_prompt }}</pre>
+  <p>The AI is the technical support agent and will greet you first. Speak as the
+     caller — you can talk over it, and it will stop to listen and acknowledge you
+     with brief backchannels. Tool calls (device health checks) are a later phase.</p>
+
+  <div id="call" data-session-url="{{ url_for('agent.session') }}">
+    <div class="controls">
+      <button id="start">Call the agent</button>
+      <button id="end" disabled>Hang up</button>
+    </div>
+    <p id="status" role="status" aria-live="polite">Idle</p>
+    <div id="transcript" class="transcript" aria-live="polite"></div>
+  </div>
+
+  <details>
+    <summary>Active agent system prompt (admin-configurable)</summary>
+    <pre>{{ agent_prompt }}</pre>
+  </details>
+
+  <script src="{{ url_for('static', filename='voice.js') }}"></script>
+  <script src="{{ url_for('static', filename='call-ui.js') }}"></script>
 {% endblock %}
