@@ -4,11 +4,9 @@ Credentials come from the environment (CCA_ADMIN_USER / CCA_ADMIN_PASSWORD),
 which are loaded from the project .env. Read at request time so the check always
 reflects current config and stays easy to test.
 """
-import hmac
-import os
-
 from flask import (
     Blueprint,
+    current_app,
     redirect,
     render_template,
     request,
@@ -17,17 +15,6 @@ from flask import (
 )
 
 bp = Blueprint("auth", __name__)
-
-
-def check_credentials(username, password):
-    """Constant-time credential check against the configured admin."""
-    u = os.environ.get("CCA_ADMIN_USER")
-    p = os.environ.get("CCA_ADMIN_PASSWORD")
-    if not u or not p:
-        return False
-    ok_user = hmac.compare_digest(username or "", u)
-    ok_pass = hmac.compare_digest(password or "", p)
-    return ok_user and ok_pass
 
 
 def _safe_next(target):
@@ -41,8 +28,8 @@ def _safe_next(target):
 def login():
     error = None
     if request.method == "POST":
-        if check_credentials(request.form.get("username", ""),
-                             request.form.get("password", "")):
+        if current_app.credentials.verify(request.form.get("username", ""),
+                                          request.form.get("password", "")):
             session.clear()
             session["user"] = request.form.get("username", "")
             return redirect(_safe_next(request.args.get("next", "")))

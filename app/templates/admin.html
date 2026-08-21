@@ -1,6 +1,24 @@
 {% extends "base.html" %}
 {% block page_title %}Admin Panel{% endblock %}
 {% block content %}
+  <div class="card">
+    <h2 style="margin-top:0">Change password</h2>
+    {% if pw_error %}<p class="error" role="alert">{{ pw_error }}</p>{% endif %}
+    {% if pw_success %}<p class="status" role="status">{{ pw_success }}</p>{% endif %}
+    <form method="post" action="{{ url_for('admin.change_password') }}" class="setting">
+      <label for="current_password">Current password</label>
+      <input id="current_password" name="current_password" type="password"
+             autocomplete="current-password" required>
+      <label for="new_password">New password (min 12 characters)</label>
+      <input id="new_password" name="new_password" type="password"
+             autocomplete="new-password" minlength="12" required>
+      <label for="confirm_password">Confirm new password</label>
+      <input id="confirm_password" name="confirm_password" type="password"
+             autocomplete="new-password" minlength="12" required>
+      <button type="submit" class="btn primary">Update password</button>
+    </form>
+  </div>
+
   <p class="muted" style="margin-top:0">Each setting is configured independently.</p>
   {% for key, value in settings.items() %}
   <div class="card">

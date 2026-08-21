@@ -55,12 +55,17 @@ def check_session_building():
 
 def check_auth():
     import os
+    import tempfile
     os.environ["CCA_ADMIN_USER"] = "tester"
     os.environ["CCA_ADMIN_PASSWORD"] = "s3cret-temp"
 
     from app import create_app
+    from app.credentials import Credentials
     app = create_app()
     app.config["SECRET_KEY"] = "test-key"
+
+    tmp = tempfile.mkdtemp()
+    app.credentials = Credentials(tmp)  # isolate from any real data/credentials.json
     c = app.test_client()
 
     # Unauthenticated access to a protected page redirects to login.
@@ -74,16 +79,34 @@ def check_auth():
     c.post("/login", data={"username": "tester", "password": "wrong"})
     assert c.get("/training/").status_code == 302
 
-    # Correct credentials grant access.
+    # Correct (.env bootstrap) credentials grant access.
     r = c.post("/login", data={"username": "tester", "password": "s3cret-temp"})
     assert r.status_code == 302
     assert c.get("/training/").status_code == 200
 
-    # Logout revokes access again.
-    c.get("/logout")
-    assert c.get("/training/").status_code == 302
+    # Password change: wrong current, too short, and mismatch are all rejected.
+    assert c.post("/admin/password", data={"current_password": "nope",
+        "new_password": "brandNewPassw0rd", "confirm_password": "brandNewPassw0rd"}).status_code == 400
+    assert c.post("/admin/password", data={"current_password": "s3cret-temp",
+        "new_password": "short", "confirm_password": "short"}).status_code == 400
+    assert c.post("/admin/password", data={"current_password": "s3cret-temp",
+        "new_password": "brandNewPassw0rd", "confirm_password": "different1234"}).status_code == 400
 
-    print("OK: auth gate, credential check, logout")
+    # Valid change persists to the store and takes precedence over the .env bootstrap.
+    r = c.post("/admin/password", data={"current_password": "s3cret-temp",
+        "new_password": "brandNewPassw0rd", "confirm_password": "brandNewPassw0rd"})
+    assert r.status_code == 200
+    assert app.credentials.verify("tester", "brandNewPassw0rd")
+    assert not app.credentials.verify("tester", "s3cret-temp")  # old password no longer works
+
+    # New password works through the login route; old one does not.
+    c.get("/logout")
+    assert c.post("/login", data={"username": "tester", "password": "s3cret-temp"}).status_code == 200
+    assert c.get("/training/").status_code == 302  # still gated
+    r = c.post("/login", data={"username": "tester", "password": "brandNewPassw0rd"})
+    assert r.status_code == 302 and c.get("/training/").status_code == 200
+
+    print("OK: auth gate, credential check, logout, password change")
 
 
 def main():

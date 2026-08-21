@@ -4,6 +4,7 @@ from flask import Flask, redirect, request, url_for
 from flask import session as flask_session
 
 from .config import Config
+from .credentials import Credentials
 from .settings_store import SettingsStore
 
 # Endpoints reachable without a session.
@@ -17,6 +18,7 @@ def create_app():
 
     # Single shared settings store; admin panel reads/writes it.
     app.settings = SettingsStore(os.path.join(Config.DATA_DIR, "settings.json"))
+    app.credentials = Credentials(Config.DATA_DIR)
 
     from .auth import bp as auth_bp
     from .blueprints.training import bp as training_bp
