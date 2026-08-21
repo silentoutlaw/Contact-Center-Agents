@@ -57,23 +57,34 @@ def _post(url, key, payload, timeout=30):
 def mint_realtime_key(key, instructions, voice):
     """Mint a short-lived ephemeral Realtime key; fall back to the standing key.
 
-    CEILING: the fallback hands a standing API key to the browser, which is only
-    acceptable on a trusted/local network. Upgrade path: require the ephemeral
-    endpoint to succeed and put the app behind authentication before exposing it.
+    Uses POST /v1/realtime/client_secrets. The instructions/voice are baked into
+    the ephemeral session so a leaked short-lived token is constrained to this
+    call's behaviour.
+
+    CEILING: if minting fails the fallback hands a standing API key to the
+    browser, which is only acceptable on a trusted/local network. Upgrade path:
+    require minting to succeed and put the app behind auth before exposing it.
     """
     try:
         resp = _post(
-            "https://api.openai.com/v1/realtime/sessions",
+            "https://api.openai.com/v1/realtime/client_secrets",
             key,
-            {"model": REALTIME_MODEL, "voice": voice, "instructions": instructions},
+            {
+                "session": {
+                    "type": "realtime",
+                    "model": REALTIME_MODEL,
+                    "instructions": instructions,
+                    "audio": {"output": {"voice": voice}},
+                }
+            },
         )
-        secret = (resp.get("client_secret") or {}).get("value")
+        secret = resp.get("value")
         if secret:
-            return {"key": secret, "ephemeral": True}
+            return {"key": secret, "ephemeral": True, "expires_at": resp.get("expires_at")}
     except Exception:
         # Endpoint unavailable or errored; fall back to the standing key.
         pass
-    return {"key": key, "ephemeral": False}
+    return {"key": key, "ephemeral": False, "expires_at": None}
 
 
 _GRADE_SYSTEM = """You are a call-center training evaluator. Grade the transcript \
