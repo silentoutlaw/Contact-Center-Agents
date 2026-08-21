@@ -1,0 +1,13 @@
+:root { --fg: #1a1a1a; --bg: #fff; --accent: #0b5fff; --muted: #f2f4f8; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+nav { display: flex; gap: 1rem; padding: 1rem; background: var(--muted); flex-wrap: wrap; }
+nav a { color: var(--accent); text-decoration: none; font-weight: 600; }
+nav a:hover, nav a:focus { text-decoration: underline; }
+main { padding: 1.5rem; max-width: 900px; }
+pre { background: var(--muted); padding: 1rem; overflow-x: auto; white-space: pre-wrap; }
+.setting { margin-bottom: 2rem; display: flex; flex-direction: column; gap: .5rem; }
+.setting label { font-weight: 600; }
+textarea { width: 100%; font-family: ui-monospace, monospace; padding: .5rem; }
+button { align-self: flex-start; padding: .5rem 1rem; background: var(--accent);
+         color: #fff; border: 0; border-radius: 4px; cursor: pointer; }

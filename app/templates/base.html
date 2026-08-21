@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Contact Center Agents{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav aria-label="Primary navigation">
+    <a href="{{ url_for('training.index') }}">Technical Support Call Training</a>
+    <a href="{{ url_for('agent.index') }}">Agentic Call Center Agent</a>
+    <a href="{{ url_for('admin.index') }}">Admin Panel</a>
+  </nav>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

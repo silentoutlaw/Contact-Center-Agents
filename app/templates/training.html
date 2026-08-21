@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Technical Support Call Training{% endblock %}
+{% block content %}
+  <h1>Technical Support Call Training</h1>
+  <p>Practice calls against a simulated business customer with a connectivity issue.
+     The customer persona and per-call details come from the reused simulation module.</p>
+  <p><em>Voice, interruption/barge-in handling, and live grading are a later phase.</em></p>
+  <h2>Active customer system prompt</h2>
+  <pre>{{ customer_prompt }}</pre>
+{% endblock %}
